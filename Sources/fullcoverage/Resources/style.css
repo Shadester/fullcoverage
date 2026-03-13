@@ -6,18 +6,32 @@
   --border: #30363d;
   --text: #e6edf3;
   --muted: #8b949e;
-  --green: #238636;
   --green-bg: #0d2a0f;
   --green-text: #3fb950;
-  --yellow: #9e6a03;
   --yellow-bg: #2d1f00;
   --yellow-text: #d29922;
-  --red: #da3633;
   --red-bg: #2d0d0d;
   --red-text: #f85149;
   --link: #58a6ff;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #ffffff;
+    --surface: #f6f8fa;
+    --border: #d0d7de;
+    --text: #1f2328;
+    --muted: #656d76;
+    --green-bg: #dafbe1;
+    --green-text: #1a7f37;
+    --yellow-bg: #fff8c5;
+    --yellow-text: #9a6700;
+    --red-bg: #ffebe9;
+    --red-text: #d1242f;
+    --link: #0969da;
+  }
 }
 
 body {
@@ -183,11 +197,11 @@ a:hover { text-decoration: underline; }
 .source-code { padding-left: 12px; }
 
 /* Line coverage colors */
-tr.cov-green  { background: #0d2a0f; }
+tr.cov-green  { background: var(--green-bg); }
 tr.cov-green  .hit-count { color: var(--green-text); }
-tr.cov-yellow { background: #2d1f00; }
+tr.cov-yellow { background: var(--yellow-bg); }
 tr.cov-yellow .hit-count { color: var(--yellow-text); }
-tr.cov-red    { background: #2d0d0d; }
+tr.cov-red    { background: var(--red-bg); }
 tr.cov-red    .hit-count { color: var(--red-text); }
 
 /* ── Legend ─────────────────────────────────────────────────────────────── */
