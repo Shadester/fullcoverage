@@ -133,6 +133,8 @@ Patterns are matched against the full file path using glob syntax (`*` matches a
 
 ### Index page
 
+![Index page](docs/screenshots/index.png)
+
 Shows aggregate badges for lines, branches, and functions, followed by a per-file table with coverage bars:
 
 ```
@@ -150,6 +152,8 @@ fullcoverage — 2026-03-13
 Rows are color-coded: green ≥ 80%, yellow 50–79%, red < 50%.
 
 ### File page
+
+![File coverage page](docs/screenshots/file.png)
 
 Annotated source with per-line hit counts and color coding:
 
