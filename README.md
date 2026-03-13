@@ -145,7 +145,9 @@ xcresult
        → per-line executionCount + subranges
 ```
 
-Branch coverage is counted from `subranges`: each subrange within a line represents a distinct code region (ternary arm, short-circuit operand, pattern match branch, etc.). A branch is *covered* if its `executionCount > 0`.
+**A note on branch coverage:** Xcode doesn't expose a direct "branch taken / not taken" count, so fullcoverage approximates it using *subranges* — the sub-expression hit counts that xccov embeds in each line. Think of a line like `a && b || c`: each operand that can be short-circuited is tracked separately. If any of those sub-expressions was never reached, the line is counted as a partially-covered branch.
+
+This is a good approximation, but it isn't identical to a traditional branch coverage metric (like what you'd get from LLVM's instrumented profiling). It may over- or under-count in some cases — treat it as a useful signal rather than a precise measurement.
 
 No instrumented binary or `.profdata` extraction is needed — everything is read directly from the xcresult bundle.
 
