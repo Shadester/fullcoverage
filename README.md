@@ -4,6 +4,10 @@ A Swift CLI tool that reads an Xcode `.xcresult` bundle and generates a multi-fi
 
 Coverage data is sourced entirely from `xcrun xccov`, which means it works with modern Xcode xcresult bundles out of the box. Branch coverage is derived from xccov's per-line `subranges`, which encode sub-expression hit counts.
 
+![Index page](docs/screenshots/index.png)
+
+![File coverage page](docs/screenshots/file.png)
+
 ## Features
 
 - **Lines, branches, and functions** coverage per file and in aggregate
@@ -128,25 +132,6 @@ fullcoverage App.xcresult --config ci/coverage.yml
 ```
 
 Patterns are matched against the full file path using glob syntax (`*` matches any sequence of characters, `?` matches a single character).
-
-## Report
-
-### Index page
-
-![Index page](docs/screenshots/index.png)
-
-Shows aggregate badges for lines, branches, and functions, followed by a per-file table with coverage bars. Rows are color-coded: green ≥ 80%, yellow 50–79%, red < 50%.
-
-### File page
-
-![File coverage page](docs/screenshots/file.png)
-
-Annotated source with per-line hit counts and color coding:
-
-- **Green** — line executed, all sub-expressions hit
-- **Yellow** — line executed, but at least one sub-expression (branch) was never taken
-- **Red** — line never executed
-- **No color** — not executable (comments, declarations, etc.)
 
 ## How it works
 
