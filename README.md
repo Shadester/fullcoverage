@@ -34,13 +34,11 @@ If you use [Mint](https://github.com/yonaskolb/Mint) for Swift CLI tools:
 mint install Shadester/fullcoverage
 ```
 
-### Download binary
-
-Download the latest universal binary from the [Releases](https://github.com/Shadester/fullcoverage/releases) page, then:
+### curl
 
 ```bash
-tar xzf fullcoverage-*-macos.tar.gz
-mv fullcoverage /usr/local/bin/
+curl -L https://github.com/Shadester/fullcoverage/releases/latest/download/fullcoverage-macos.tar.gz \
+  | tar xz -C /usr/local/bin
 ```
 
 ### Build from source
