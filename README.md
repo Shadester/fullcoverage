@@ -28,7 +28,7 @@ brew install fullcoverage
 
 ### Mint
 
-If you use [Mint](https://github.com/yonaskolb/Mint) for Swift CLI tools:
+If you use [Mint](https://github.com/yonaskolb/Mint) for Swift CLI tools (builds from source, requires Xcode):
 
 ```bash
 mint install Shadester/fullcoverage
