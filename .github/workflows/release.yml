@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build universal binary
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build arm64
+        run: swift build -c release --arch arm64
+
+      - name: Build x86_64
+        run: swift build -c release --arch x86_64
+
+      - name: Create universal binary
+        run: |
+          lipo -create \
+            .build/arm64-apple-macosx/release/fullcoverage \
+            .build/x86_64-apple-macosx/release/fullcoverage \
+            -output fullcoverage
+
+      - name: Package
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          TARBALL="fullcoverage-${VERSION}-macos.tar.gz"
+          tar czf "$TARBALL" fullcoverage
+          SHA256=$(shasum -a 256 "$TARBALL" | awk '{print $1}')
+          echo "VERSION=$VERSION"   >> $GITHUB_ENV
+          echo "TARBALL=$TARBALL"   >> $GITHUB_ENV
+          echo "SHA256=$SHA256"     >> $GITHUB_ENV
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.TARBALL }}
+
+      - name: Update Homebrew formula
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          git clone https://x-access-token:${TAP_TOKEN}@github.com/Shadester/homebrew-tap.git
+          cd homebrew-tap
+
+          URL="https://github.com/Shadester/fullcoverage/releases/download/v${VERSION}/${TARBALL}"
+          sed -i '' "s|url \".*\"|url \"${URL}\"|"       Formula/fullcoverage.rb
+          sed -i '' "s|sha256 \".*\"|sha256 \"${SHA256}\"|" Formula/fullcoverage.rb
+          sed -i '' "s|version \".*\"|version \"${VERSION}\"|" Formula/fullcoverage.rb
+
+          git config user.name  "github-actions"
+          git config user.email "github-actions@github.com"
+          git add Formula/fullcoverage.rb
+          git commit -m "fullcoverage ${VERSION}"
+          git push
