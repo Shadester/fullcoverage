@@ -135,38 +135,13 @@ Patterns are matched against the full file path using glob syntax (`*` matches a
 
 ![Index page](docs/screenshots/index.png)
 
-Shows aggregate badges for lines, branches, and functions, followed by a per-file table with coverage bars:
-
-```
-fullcoverage — 2026-03-13
-
-[ Lines: 68.4% ]  [ Branches: 54.2% ]  [ Functions: 74.1% ]
-
- File                           Target              Lines    Branches  Functions
- BluetoothTransport.swift       NetworkingKit        42.1%   29.6%     55.0%
- FITFileGenerator.swift         NetworkingKit       100.0%   —        100.0%
- TrainerConnectionManager.swift TrainerKit           61.3%   30.8%     66.7%
- VirtualGearSystem.swift        CoreDomain          100.0%   —        100.0%
-```
-
-Rows are color-coded: green ≥ 80%, yellow 50–79%, red < 50%.
+Shows aggregate badges for lines, branches, and functions, followed by a per-file table with coverage bars. Rows are color-coded: green ≥ 80%, yellow 50–79%, red < 50%.
 
 ### File page
 
 ![File coverage page](docs/screenshots/file.png)
 
 Annotated source with per-line hit counts and color coding:
-
-```
-← Back to index
-
-VirtualGearSystem.swift
-100.0% lines (129/129)  •  100.0% functions (12/12)
-
-  93 │ 40 │     let next = gears.index(after: current)    ← green
-  94 │ 40 │     guard next != gears.endIndex else {        ← yellow (partial subrange)
-  95 │ 30 │         return current                         ← green
-```
 
 - **Green** — line executed, all sub-expressions hit
 - **Yellow** — line executed, but at least one sub-expression (branch) was never taken
