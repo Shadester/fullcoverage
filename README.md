@@ -88,15 +88,46 @@ open ./coverage/index.html
 ### Options
 
 ```
-fullcoverage <xcresult> [-o DIR] [-j N]
+fullcoverage <xcresult> [-o DIR] [-j N] [--ignore PATTERN ...] [--config FILE]
 
 arguments:
-  xcresult        Path to the .xcresult bundle
+  xcresult          Path to the .xcresult bundle
 
 options:
-  -o, --output    Output directory (default: ./coverage)
-  -j, --jobs      Parallel workers for xccov calls (default: 8)
+  -o, --output      Output directory (default: ./coverage)
+  -j, --jobs        Parallel workers for xccov calls (default: 8)
+  --ignore PATTERN  Glob pattern for files to exclude (repeatable)
+  --config FILE     Path to config file (default: .fullcoverage.yml)
 ```
+
+### Ignoring files
+
+Use a `.fullcoverage.yml` config file committed to your repo to exclude files from the report:
+
+```yaml
+# .fullcoverage.yml
+ignore:
+  - "*Tests*"
+  - "*.generated.swift"
+  - "*/Pods/*"
+```
+
+The config file is looked up from the current working directory by default. You can point to a different file with `--config`.
+
+CLI `--ignore` flags are merged with (and extend) the config file patterns:
+
+```bash
+# Via config file
+fullcoverage App.xcresult -o coverage
+
+# Via CLI flags (one-off, no config file needed)
+fullcoverage App.xcresult -o coverage --ignore '*Tests*' --ignore '*/Pods/*'
+
+# Custom config path
+fullcoverage App.xcresult --config ci/coverage.yml
+```
+
+Patterns are matched against the full file path using glob syntax (`*` matches any sequence of characters, `?` matches a single character).
 
 ## Report
 
@@ -163,6 +194,8 @@ fullcoverage/
     ├── CLI.swift           # ArgumentParser entry point
     ├── Models.swift        # LineInfo, FileSummary, FileReport
     ├── Parser.swift        # xccov subprocess calls + JSON parsing
+    ├── Config.swift        # .fullcoverage.yml loading
+    ├── Ignore.swift        # glob-pattern matching for --ignore
     ├── Resources/
     │   └── style.css
     └── HTML/
