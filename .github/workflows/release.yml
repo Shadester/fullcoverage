@@ -48,6 +48,7 @@ jobs:
             fullcoverage-macos.tar.gz
 
       - name: Update Homebrew formula
+        continue-on-error: true
         env:
           TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
