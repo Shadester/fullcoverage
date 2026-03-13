@@ -5,3 +5,9 @@ func shouldIgnore(path: String, patterns: [String]) -> Bool {
         NSPredicate(format: "SELF LIKE %@", pattern).evaluate(with: path)
     }
 }
+
+func shouldInclude(path: String, patterns: [String]) -> Bool {
+    patterns.contains { pattern in
+        NSPredicate(format: "SELF LIKE %@", pattern).evaluate(with: path)
+    }
+}

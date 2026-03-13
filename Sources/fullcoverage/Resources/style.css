@@ -84,6 +84,23 @@ a:hover { text-decoration: underline; }
 .badge.yellow .value { color: var(--yellow-text); }
 .badge.red .value { color: var(--red-text); }
 
+/* ── Filter input ───────────────────────────────────────────────────────── */
+.filter-row {
+  margin-bottom: 12px;
+}
+.filter-input {
+  width: 300px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+.filter-input::placeholder { color: var(--muted); }
+.filter-input:focus { outline: none; border-color: var(--link); }
+
 /* ── Coverage table ──────────────────────────────────────────────────────── */
 .coverage-table {
   width: 100%;
@@ -113,6 +130,33 @@ a:hover { text-decoration: underline; }
 .coverage-table td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
 .coverage-table tbody tr:last-child td { border-bottom: none; }
 .coverage-table tbody tr:hover { background: var(--surface); }
+
+/* ── Sortable headers ────────────────────────────────────────────────────── */
+.coverage-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+.coverage-table th.sortable:hover { color: var(--text); }
+.coverage-table th[data-sort-dir="asc"]::after  { content: " ↑"; color: var(--link); }
+.coverage-table th[data-sort-dir="desc"]::after { content: " ↓"; color: var(--link); }
+
+/* ── Group rows ──────────────────────────────────────────────────────────── */
+tr.group-header td {
+  background: var(--surface);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+tr.group-subtotal td {
+  background: var(--surface);
+  font-size: 12px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+}
 
 .muted { color: var(--muted); }
 .pct { font-weight: 500; }
@@ -219,3 +263,13 @@ tr.cov-red    .hit-count { color: var(--red-text); }
 .legend-dot.green  { background: var(--green-bg); border: 1px solid var(--green-text); }
 .legend-dot.yellow { background: var(--yellow-bg); border: 1px solid var(--yellow-text); }
 .legend-dot.red    { background: var(--red-bg); border: 1px solid var(--red-text); }
+.legend-hint { margin-left: auto; }
+kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}

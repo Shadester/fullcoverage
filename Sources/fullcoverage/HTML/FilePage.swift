@@ -4,7 +4,9 @@ func renderFilePage(report: FileReport, backHref: String = "../index.html") -> S
     let sourceLines: [String]
     do {
         let text = try String(contentsOfFile: report.filename, encoding: .utf8)
-        sourceLines = text.components(separatedBy: "\n")
+        // Normalize CRLF before splitting so Windows-formatted files don't
+        // leave a trailing \r on every line.
+        sourceLines = text.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
     } catch {
         sourceLines = ["(source not available: \(report.filename))"]
     }
@@ -79,12 +81,25 @@ func renderFilePage(report: FileReport, backHref: String = "../index.html") -> S
         <span class="legend-item"><span class="legend-dot green"></span> Covered</span>
         <span class="legend-item"><span class="legend-dot yellow"></span> Partial</span>
         <span class="legend-item"><span class="legend-dot red"></span> Uncovered</span>
+        <span class="legend-item legend-hint">Press <kbd>n</kbd> / <kbd>p</kbd> to jump between uncovered lines</span>
       </div>
       <table class="source-table">
         <tbody>
     \(rows)
         </tbody>
       </table>
+      <script>
+    (function(){
+      var red=Array.from(document.querySelectorAll('tr.cov-red'));
+      if(!red.length)return;
+      var cur=-1;
+      document.addEventListener('keydown',function(e){
+        if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+        if(e.key==='n'){cur=(cur+1)%red.length;red[cur].scrollIntoView({block:'center'});}
+        if(e.key==='p'){cur=(cur-1+red.length)%red.length;red[cur].scrollIntoView({block:'center'});}
+      });
+    })();
+      </script>
     </body>
     </html>
     """

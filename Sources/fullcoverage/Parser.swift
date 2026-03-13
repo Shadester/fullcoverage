@@ -138,9 +138,19 @@ func getFileLines(xcresult: URL, filepath: String) throws -> [LineInfo] {
     return jsonLines.map(parseLineInfo)
 }
 
-func buildReports(xcresult: URL, maxWorkers: Int = 8) throws -> [FileReport] {
-    let targets = try getReport(xcresult: xcresult)
+func buildReports(
+    xcresult: URL,
+    maxWorkers: Int = 8,
+    targetFilter: String? = nil,
+    onProgress: ((Int, Int) -> Void)? = nil
+) throws -> [FileReport] {
+    var targets = try getReport(xcresult: xcresult)
     if targets.isEmpty { throw FullcoverageError.noTargetsFound }
+
+    // Optional target filter
+    if let filter = targetFilter, !filter.isEmpty {
+        targets = targets.filter { $0.name.localizedCaseInsensitiveContains(filter) }
+    }
 
     // Collect unique file entries (first target wins for de-duplication)
     var seen = Set<String>()
@@ -156,6 +166,8 @@ func buildReports(xcresult: URL, maxWorkers: Int = 8) throws -> [FileReport] {
     var linesByPath = [String: [LineInfo]]()
     let lock = NSLock()
     var fetchError: Error?
+    var completedCount = 0
+    let total = fileEntries.count
     let semaphore = DispatchSemaphore(value: maxWorkers)
     let group = DispatchGroup()
 
@@ -167,7 +179,11 @@ func buildReports(xcresult: URL, maxWorkers: Int = 8) throws -> [FileReport] {
             guard fetchError == nil else { return }
             do {
                 let lines = try getFileLines(xcresult: xcresult, filepath: entry.path)
-                lock.withLock { linesByPath[entry.path] = lines }
+                lock.withLock {
+                    linesByPath[entry.path] = lines
+                    completedCount += 1
+                    onProgress?(completedCount, total)
+                }
             } catch {
                 lock.withLock { if fetchError == nil { fetchError = error } }
             }
