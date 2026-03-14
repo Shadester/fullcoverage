@@ -199,16 +199,6 @@ fullcoverage App.xcresult -o coverage \
 
 When running in GitHub Actions, fullcoverage automatically writes a Markdown coverage table to `$GITHUB_STEP_SUMMARY`, which appears directly on the PR checks page — no need to host or upload the HTML report.
 
-### JSON output
-
-Use `--format json` (or `--format all` to get both HTML and JSON) to write `coverage/coverage.json`:
-
-```bash
-fullcoverage App.xcresult --format all -o coverage
-```
-
-The JSON file contains overall totals and per-file metrics, suitable for uploading to Codecov, Coveralls, or piping into custom scripts.
-
 ### Xcode Cloud
 
 Xcode Cloud runs custom shell scripts from a `ci_scripts/` directory at the root of your `.xcodeproj` or `.xcworkspace`. There is no Homebrew or sudo, so install the pre-built binary into `$HOME/.local/bin`.
@@ -242,6 +232,16 @@ chmod +x ci_scripts/ci_post_clone.sh ci_scripts/ci_post_xcodebuild.sh
 ```
 
 The HTML report is written to `$CI_ARTIFACTS_PATH/coverage`, which makes it downloadable from the build detail page in Xcode Cloud. `--min-lines`, `--min-branches`, and `--min-functions` work as a quality gate exactly as in other CI environments. `$GITHUB_STEP_SUMMARY` is not available in Xcode Cloud — use `--format json` if you need a machine-readable artifact.
+
+### JSON output
+
+Use `--format json` (or `--format all` to get both HTML and JSON) to write `coverage/coverage.json`:
+
+```bash
+fullcoverage App.xcresult --format all -o coverage
+```
+
+The JSON file contains overall totals and per-file metrics, suitable for uploading to Codecov, Coveralls, or piping into custom scripts.
 
 ### SVG badge
 
