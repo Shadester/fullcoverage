@@ -209,6 +209,40 @@ fullcoverage App.xcresult --format all -o coverage
 
 The JSON file contains overall totals and per-file metrics, suitable for uploading to Codecov, Coveralls, or piping into custom scripts.
 
+### Xcode Cloud
+
+Xcode Cloud runs custom shell scripts from a `ci_scripts/` directory at the root of your `.xcodeproj` or `.xcworkspace`. There is no Homebrew or sudo, so install the pre-built binary into `$HOME/.local/bin`.
+
+**`ci_scripts/ci_post_clone.sh`** — runs once after the repo is cloned:
+
+```bash
+#!/bin/bash -e
+mkdir -p "$HOME/.local/bin"
+curl -fsSL https://github.com/Shadester/fullcoverage/releases/latest/download/fullcoverage-macos.tar.gz \
+  | tar xz -C "$HOME/.local/bin"
+```
+
+**`ci_scripts/ci_post_xcodebuild.sh`** — runs after xcodebuild finishes:
+
+```bash
+#!/bin/bash -e
+
+# Only run when a test action produced an xcresult
+[ -n "$CI_RESULT_BUNDLE_PATH" ] || exit 0
+
+"$HOME/.local/bin/fullcoverage" "$CI_RESULT_BUNDLE_PATH" \
+  -o "$CI_ARTIFACTS_PATH/coverage" \
+  --min-lines 80
+```
+
+Both scripts must be committed as executable:
+
+```bash
+chmod +x ci_scripts/ci_post_clone.sh ci_scripts/ci_post_xcodebuild.sh
+```
+
+The HTML report is written to `$CI_ARTIFACTS_PATH/coverage`, which makes it downloadable from the build detail page in Xcode Cloud. `--min-lines`, `--min-branches`, and `--min-functions` work as a quality gate exactly as in other CI environments. `$GITHUB_STEP_SUMMARY` is not available in Xcode Cloud — use `--format json` if you need a machine-readable artifact.
+
 ### SVG badge
 
 Generate a `coverage: 82%` badge and commit it alongside your README:
