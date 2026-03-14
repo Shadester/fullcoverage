@@ -176,6 +176,9 @@ fullcoverage App.xcresult -o coverage \
 ### GitHub Actions
 
 ```yaml
+- name: Install fullcoverage
+  run: brew install Shadester/tap/fullcoverage
+
 - name: Run tests
   run: |
     xcodebuild test \
