@@ -303,9 +303,11 @@ xcresult
        → per-line executionCount + subranges
 ```
 
-**A note on branch coverage:** Xcode doesn't expose a direct "branch taken / not taken" count, so fullcoverage approximates it using *subranges* — the sub-expression hit counts that xccov embeds in each line. Think of a line like `a && b || c`: each operand that can be short-circuited is tracked separately. If any sub-expression was never reached, the line is counted as a partially-covered branch.
+**A note on branch coverage:** Imagine you write `if isLoggedIn && hasPermission { ... }`. Swift can skip checking `hasPermission` entirely if `isLoggedIn` is already `false` — that's called short-circuit evaluation. So even though your tests ran that line, they might never have tested the case where `isLoggedIn` is `true` but `hasPermission` is `false`.
 
-This is a good approximation, but not identical to a traditional branch coverage metric (like what you'd get from LLVM's instrumented profiling). Treat it as a useful signal rather than a precise measurement.
+Xcode tracks each of those sub-expressions separately (called *subranges*). fullcoverage reads those counts and uses them to approximate branch coverage: if any sub-expression on a line was never evaluated, that line is flagged as a partial branch.
+
+This isn't exactly the same as a traditional branch coverage tool, but it's a genuinely useful signal for finding conditions your tests never exercised.
 
 No instrumented binary or `.profdata` extraction is needed — everything is read directly from the xcresult bundle.
 
