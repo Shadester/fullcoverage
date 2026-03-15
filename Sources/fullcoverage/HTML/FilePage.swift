@@ -1,4 +1,5 @@
 import Foundation
+import Plot
 
 func renderFilePage(report: FileReport, backHref: String = "../index.html") -> String {
     let sourceLines: [String]
@@ -13,13 +14,8 @@ func renderFilePage(report: FileReport, backHref: String = "../index.html") -> S
 
     let lineMap = Dictionary(uniqueKeysWithValues: report.lines.map { ($0.line, $0) })
 
-    let rows = sourceLines.enumerated().map { (i, sourceLine) -> String in
+    let rows = Node<HTML.TableContext>.group(sourceLines.enumerated().map { (i, sourceLine) -> Node<HTML.TableContext> in
         let lineNum = i + 1
-        let escaped = sourceLine
-            .replacingOccurrences(of: "&", with: "&amp;")
-            .replacingOccurrences(of: "<", with: "&lt;")
-            .replacingOccurrences(of: ">", with: "&gt;")
-
         let rowClass: String
         let hitStr: String
 
@@ -35,14 +31,13 @@ func renderFilePage(report: FileReport, backHref: String = "../index.html") -> S
             rowClass = ""; hitStr = ""
         }
 
-        return """
-        <tr class="\(rowClass)">
-          <td class="line-num">\(lineNum)</td>
-          <td class="hit-count">\(hitStr)</td>
-          <td class="source-code">\(escaped)</td>
-        </tr>
-        """
-    }.joined(separator: "\n")
+        return .tr(
+            .class(rowClass),
+            .td(.class("line-num"), .text("\(lineNum)")),
+            .td(.class("hit-count"), .text(hitStr)),
+            .td(.class("source-code"), .text(sourceLine))
+        )
+    })
 
     let s = report.summary
     let lp = s.lineCoverage
@@ -50,57 +45,66 @@ func renderFilePage(report: FileReport, backHref: String = "../index.html") -> S
     let fp = s.functionCoverage
     let filename = URL(fileURLWithPath: report.filename).lastPathComponent
 
-    let branchStat = report.branchCount > 0
-        ? "<span class=\"stat \(cls(bp))\"><span class=\"value\">\(fmt(bp))</span> branches <span class=\"stat-detail\">(\(report.coveredBranches)/\(report.branchCount))</span></span>"
-        : ""
+    let branchStat: Node<HTML.BodyContext> = report.branchCount > 0
+        ? .span(.class("stat \(cls(bp))"),
+            .span(.class("value"), .text(fmt(bp))),
+            .text(" branches "),
+            .span(.class("stat-detail"), .text("(\(report.coveredBranches)/\(report.branchCount))"))
+          )
+        : .empty
 
-    let stats = """
-    <div class="file-stats">
-      <span class="stat \(cls(lp))"><span class="value">\(fmt(lp))</span> lines <span class="stat-detail">(\(s.coveredLines)/\(s.executableLines))</span></span>
-      \(branchStat)
-      <span class="stat \(cls(fp))"><span class="value">\(fmt(fp))</span> functions <span class="stat-detail">(\(s.coveredFunctions)/\(s.functions.count))</span></span>
-    </div>
-    """
-
-    return """
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>\(filename)</title>
-      <link rel="stylesheet" href="../style.css">
-    </head>
-    <body>
-      <div class="back-link"><a href="\(backHref)">← Back to index</a></div>
-      <div class="file-header">
-        <h2>\(filename)</h2>
-        \(stats)
-      </div>
-      <div class="legend">
-        <span class="legend-item"><span class="legend-dot green"></span> Covered</span>
-        <span class="legend-item"><span class="legend-dot yellow"></span> Partial</span>
-        <span class="legend-item"><span class="legend-dot red"></span> Uncovered</span>
-        <span class="legend-item legend-hint">Press <kbd>n</kbd> / <kbd>p</kbd> to jump between uncovered lines</span>
-      </div>
-      <table class="source-table">
-        <tbody>
-    \(rows)
-        </tbody>
-      </table>
-      <script>
-    (function(){
-      var red=Array.from(document.querySelectorAll('tr.cov-red'));
-      if(!red.length)return;
-      var cur=-1;
-      document.addEventListener('keydown',function(e){
-        if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
-        if(e.key==='n'){cur=(cur+1)%red.length;red[cur].scrollIntoView({block:'center'});}
-        if(e.key==='p'){cur=(cur-1+red.length)%red.length;red[cur].scrollIntoView({block:'center'});}
-      });
-    })();
-      </script>
-    </body>
-    </html>
-    """
+    return HTML(
+        .head(
+            .encoding(.utf8),
+            .raw("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"),
+            .title(filename),
+            .stylesheet("../style.css")
+        ),
+        .body(
+            .div(.class("back-link"), .a(.href(backHref), .text("← Back to index"))),
+            .div(.class("file-header"),
+                .h2(.text(filename)),
+                .div(.class("file-stats"),
+                    .span(.class("stat \(cls(lp))"),
+                        .span(.class("value"), .text(fmt(lp))),
+                        .text(" lines "),
+                        .span(.class("stat-detail"), .text("(\(s.coveredLines)/\(s.executableLines))"))
+                    ),
+                    branchStat,
+                    .span(.class("stat \(cls(fp))"),
+                        .span(.class("value"), .text(fmt(fp))),
+                        .text(" functions "),
+                        .span(.class("stat-detail"), .text("(\(s.coveredFunctions)/\(s.functions.count))"))
+                    )
+                )
+            ),
+            .div(.class("legend"),
+                .span(.class("legend-item"), .span(.class("legend-dot green")), .text(" Covered")),
+                .span(.class("legend-item"), .span(.class("legend-dot yellow")), .text(" Partial")),
+                .span(.class("legend-item"), .span(.class("legend-dot red")), .text(" Uncovered")),
+                .span(.class("legend-item legend-hint"),
+                    .text("Press "),
+                    .raw("<kbd>n</kbd>"),
+                    .text(" / "),
+                    .raw("<kbd>p</kbd>"),
+                    .text(" to jump between uncovered lines")
+                )
+            ),
+            .table(.class("source-table"),
+                .tbody(rows)
+            ),
+            .script(.raw("""
+(function(){
+  var red=Array.from(document.querySelectorAll('tr.cov-red'));
+  if(!red.length)return;
+  var cur=-1;
+  document.addEventListener('keydown',function(e){
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+    if(e.key==='n'){cur=(cur+1)%red.length;red[cur].scrollIntoView({block:'center'});}
+    if(e.key==='p'){cur=(cur-1+red.length)%red.length;red[cur].scrollIntoView({block:'center'});}
+  });
+})();
+"""))
+        )
+    ).render()
 }
