@@ -339,6 +339,7 @@ fullcoverage/
     ├── Parser.swift        # xccov subprocess calls + JSON parsing
     ├── Config.swift        # .fullcoverage.yml loading
     ├── Ignore.swift        # glob-pattern matching for --ignore / --include
+    ├── SlatherConfig.swift # imports ignore patterns from .slather.yml
     ├── Codeowners.swift    # CODEOWNERS parsing and path matching
     ├── Badge.swift         # SVG badge generation
     ├── GitHubSummary.swift # GitHub Actions step summary
