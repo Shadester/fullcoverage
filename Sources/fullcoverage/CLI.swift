@@ -68,6 +68,9 @@ struct Fullcoverage: ParsableCommand {
     @Option(name: .long, help: "Path to CODEOWNERS file (auto-discovered if omitted).")
     var codeowners: String?
 
+    @Option(name: .long, help: "Path to a .slather.yml file; its `ignore` patterns are merged into the ignore list.")
+    var slatherConfig: String?
+
     @Option(name: .long, help: "Only include files from this Xcode target.")
     var target: String?
 
@@ -112,7 +115,11 @@ struct Fullcoverage: ParsableCommand {
         let resolvedMinBranches  = minBranches  ?? cfg.minBranches
         let resolvedMinFunctions = minFunctions ?? cfg.minFunctions
 
-        let ignorePatterns = cfg.ignore + ignore
+        var ignorePatterns = cfg.ignore + ignore
+        if let p = slatherConfig ?? cfg.slatherConfig {
+            let url = URL(fileURLWithPath: p, relativeTo: cwd).standardizedFileURL
+            ignorePatterns += try SlatherConfig.loadIgnorePatterns(from: url)
+        }
         let includePatterns = cfg.include + include
 
         let outputURL = URL(fileURLWithPath: resolvedOutput, relativeTo: cwd).standardizedFileURL

@@ -114,6 +114,7 @@ OPTIONS:
   --sort <order>         Sort order: name (default), coverage, lines, branches, functions
   --group-by <group>     Group rows: none (default), target, codeowners
   --codeowners <file>    Path to CODEOWNERS (auto-discovered if omitted)
+  --slather-config <file> Import ignore patterns from a .slather.yml file
   --target <name>        Only include files from this Xcode target
   --min-lines <pct>      Minimum line coverage % — exits 1 if not met
   --min-branches <pct>   Minimum branch coverage %
@@ -290,6 +291,22 @@ fullcoverage App.xcresult --include 'Sources/Auth/*'
 ```
 
 Patterns are matched against the full file path using glob syntax (`*` = any sequence, `?` = single character).
+
+### Importing from a Slather config
+
+If your project already has a `.slather.yml`, you can import its `ignore` list directly instead of duplicating it:
+
+```bash
+fullcoverage App.xcresult --slather-config .slather.yml
+```
+
+Or set it once in `.fullcoverage.yml`:
+
+```yaml
+slather_config: .slather.yml
+```
+
+The CLI flag takes precedence. Only the `ignore:` key is read from the Slather file; all other Slather-specific keys are ignored.
 
 ## How it works
 

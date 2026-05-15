@@ -12,6 +12,7 @@ struct Config {
     var minFunctions: Double? = nil
     var target: String? = nil
     var sort: String? = nil
+    var slatherConfig: String? = nil
 
     static func load(from url: URL) throws -> Config {
         let text = try String(contentsOf: url, encoding: .utf8)
@@ -27,6 +28,7 @@ struct Config {
         if let v = dict["min_lines"] { config.minLines = asDouble(v) }
         if let v = dict["min_branches"] { config.minBranches = asDouble(v) }
         if let v = dict["min_functions"] { config.minFunctions = asDouble(v) }
+        config.slatherConfig = dict["slather_config"] as? String
         return config
     }
 }
