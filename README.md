@@ -143,6 +143,7 @@ sort: coverage
 min_lines: 80
 min_branches: 60
 min_functions: 80
+slather_config: .slather.yml   # optional: import ignore patterns from Slather
 ```
 
 CLI flags take precedence over config file values. `--ignore` and `--include` extend the config lists rather than replacing them.
