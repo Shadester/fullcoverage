@@ -1,8 +1,10 @@
 # fullcoverage
 
-A Swift CLI tool that reads an Xcode `.xcresult` bundle and generates a multi-file static HTML coverage report — similar to [Slather](https://github.com/SlatherOrg/slather) or [Kover](https://kotlin.github.io/kover/), but with no extra toolchain required.
+fullcoverage is a Swift CLI tool. It reads an Xcode `.xcresult` bundle. It creates a static HTML coverage report with multiple files.
 
-Coverage data is sourced entirely from `xcrun xccov`, which means it works with modern Xcode xcresult bundles out of the box. Branch coverage is derived from xccov's per-line `subranges`, which encode sub-expression hit counts.
+It is similar to [Slather](https://github.com/SlatherOrg/slather) and [Kover](https://kotlin.github.io/kover/). It needs no extra toolchain.
+
+The tool gets coverage data from `xcrun xccov`. It works with current Xcode xcresult bundles. It gets branch coverage from xccov `subranges`, which contain hit counts for sub-expressions.
 
 ![Index page](docs/screenshots/index.png)
 
@@ -10,23 +12,23 @@ Coverage data is sourced entirely from `xcrun xccov`, which means it works with 
 
 ## Features
 
-- **Lines, branches, and functions** coverage per file and in aggregate
-- Partial branch detection (yellow highlighting) from sub-expression subranges
-- Parallel per-file xccov calls with live progress — fast on any number of cores
-- Static HTML output — no server, no JavaScript framework, works offline
-- Dark-mode stylesheet with automatic light/dark switching
-- Sortable columns and live file filter on the index page
-- Keyboard shortcuts (`n` / `p`) to jump between uncovered lines in file pages
-- CI quality gate — exit non-zero when coverage falls below a threshold
-- GitHub Actions step summary written automatically when running in CI
-- JSON output for uploading to Codecov, Coveralls, or custom scripts
-- SVG badge generation for embedding in a README
-- Filter by Xcode target, glob include/exclude patterns
-- Group the index by target or by CODEOWNERS team
+- Coverage for lines, branches, and functions, per file and for all files.
+- Finds partial branches with yellow highlights from sub-expression subranges.
+- Runs xccov once per file in parallel. It shows progress and uses available CPU cores.
+- Creates static HTML. It needs no server or JavaScript framework. It works offline.
+- Uses a dark-mode stylesheet that switches automatically between light and dark modes.
+- Provides sortable columns and a live file filter on the index page.
+- Use `n` and `p` to move between uncovered lines on file pages.
+- Provides a CI quality gate. It exits with a nonzero status when coverage is below a threshold.
+- Writes a GitHub Actions step summary when it runs in CI.
+- Creates JSON output for Codecov, Coveralls, and custom scripts.
+- Creates an SVG badge for a README.
+- Filters files by Xcode target and by include or exclude glob patterns.
+- Groups index rows by target or CODEOWNERS team.
 
 ## Requirements
 
-- macOS 13+
+- macOS 13 or later
 - Xcode or the Xcode command-line tools
 
 ## Installation
@@ -40,7 +42,7 @@ brew install fullcoverage
 
 ### Mint
 
-If you use [Mint](https://github.com/yonaskolb/Mint) for Swift CLI tools:
+Use [Mint](https://github.com/yonaskolb/Mint) to install Swift CLI tools:
 
 ```bash
 mint install Shadester/fullcoverage
@@ -64,7 +66,7 @@ cp .build/release/fullcoverage /usr/local/bin/
 
 ## Usage
 
-### 1. Run your tests with coverage enabled
+### 1. Run tests with coverage enabled
 
 ```bash
 xcodebuild test \
@@ -75,9 +77,9 @@ xcodebuild test \
   -resultBundlePath /tmp/MyApp.xcresult
 ```
 
-Alternatively, enable coverage permanently in your scheme or test plan:
+You can also enable coverage in the scheme or test plan.
 
-**Xcode UI:** Product → Scheme → Edit Scheme → Test → Options → Code Coverage → check *Gather coverage*
+**Xcode UI:** Select Product > Scheme > Edit Scheme > Test > Options > Code Coverage. Select *Gather coverage*.
 
 **`.xctestplan` file:**
 ```json
@@ -88,7 +90,7 @@ Alternatively, enable coverage permanently in your scheme or test plan:
 }
 ```
 
-### 2. Generate the report
+### 2. Create the report
 
 ```bash
 fullcoverage /tmp/MyApp.xcresult -o ./coverage
@@ -126,7 +128,7 @@ OPTIONS:
 
 ## Config file
 
-Commit a `.fullcoverage.yml` to your repo so you never have to repeat flags:
+Add a `.fullcoverage.yml` file to your repository. This file sets default options.
 
 ```yaml
 # .fullcoverage.yml
@@ -146,7 +148,7 @@ min_functions: 80
 slather_config: .slather.yml   # optional: import ignore patterns from Slather
 ```
 
-CLI flags take precedence over config file values. `--ignore` and `--include` extend the config lists rather than replacing them.
+CLI flags override values in the config file. `--ignore` and `--include` add to the config lists. They do not replace the lists.
 
 ```bash
 # Use config file defaults
@@ -163,7 +165,9 @@ fullcoverage App.xcresult --config ci/coverage.yml
 
 ### Quality gate
 
-Pass `--min-lines` (and optionally `--min-branches`, `--min-functions`) to fail the build when coverage drops below a threshold. The report is still written before the process exits, so you can upload or inspect it regardless.
+Use `--min-lines` to fail the build when line coverage is below a threshold. You can also use `--min-branches` and `--min-functions`.
+
+The tool writes the report before it exits. You can upload or inspect the report after a threshold failure.
 
 ```bash
 fullcoverage App.xcresult -o coverage \
@@ -189,7 +193,7 @@ fullcoverage App.xcresult -o coverage \
       -enableCodeCoverage YES \
       -resultBundlePath coverage.xcresult
 
-- name: Generate coverage report
+- name: Create coverage report
   run: fullcoverage coverage.xcresult -o coverage --min-lines 80
 
 - name: Upload report
@@ -199,13 +203,15 @@ fullcoverage App.xcresult -o coverage \
     path: coverage/
 ```
 
-When running in GitHub Actions, fullcoverage automatically writes a Markdown coverage table to `$GITHUB_STEP_SUMMARY`, which appears directly on the PR checks page — no need to host or upload the HTML report.
+In GitHub Actions, fullcoverage writes a Markdown coverage table to `$GITHUB_STEP_SUMMARY`. GitHub shows this table on the pull request checks page. You do not need to host or upload the HTML report.
 
 ### Xcode Cloud
 
-Xcode Cloud runs custom shell scripts from a `ci_scripts/` directory at the root of your `.xcodeproj` or `.xcworkspace`. There is no Homebrew or sudo, so install the pre-built binary into `$HOME/.local/bin`.
+Xcode Cloud runs custom shell scripts from `ci_scripts/`. Put this directory at the root of the `.xcodeproj` or `.xcworkspace`.
 
-**`ci_scripts/ci_post_clone.sh`** — runs once after the repo is cloned:
+Xcode Cloud has no Homebrew or sudo. Install the pre-built binary in `$HOME/.local/bin`.
+
+**`ci_scripts/ci_post_clone.sh`** runs once after the repository is cloned:
 
 ```bash
 #!/bin/bash -e
@@ -214,7 +220,7 @@ curl -fsSL https://github.com/Shadester/fullcoverage/releases/latest/download/fu
   | tar xz -C "$HOME/.local/bin"
 ```
 
-**`ci_scripts/ci_post_xcodebuild.sh`** — runs after xcodebuild finishes:
+**`ci_scripts/ci_post_xcodebuild.sh`** runs after xcodebuild finishes:
 
 ```bash
 #!/bin/bash -e
@@ -227,27 +233,29 @@ curl -fsSL https://github.com/Shadester/fullcoverage/releases/latest/download/fu
   --min-lines 80
 ```
 
-Both scripts must be committed as executable:
+Make both scripts executable. Commit both scripts.
 
 ```bash
 chmod +x ci_scripts/ci_post_clone.sh ci_scripts/ci_post_xcodebuild.sh
 ```
 
-The HTML report is written to `$CI_ARTIFACTS_PATH/coverage`, which makes it downloadable from the build detail page in Xcode Cloud. `--min-lines`, `--min-branches`, and `--min-functions` work as a quality gate exactly as in other CI environments. `$GITHUB_STEP_SUMMARY` is not available in Xcode Cloud — use `--format json` if you need a machine-readable artifact.
+The tool writes the HTML report to `$CI_ARTIFACTS_PATH/coverage`. You can download it from the Xcode Cloud build detail page.
+
+`--min-lines`, `--min-branches`, and `--min-functions` provide a quality gate in Xcode Cloud and other CI environments. `$GITHUB_STEP_SUMMARY` is unavailable in Xcode Cloud. Use `--format json` to create a machine-readable artifact.
 
 ### JSON output
 
-Use `--format json` (or `--format all` to get both HTML and JSON) to write `coverage/coverage.json`:
+Use `--format json` to write `coverage/coverage.json`. Use `--format all` to create HTML and JSON output.
 
 ```bash
 fullcoverage App.xcresult --format all -o coverage
 ```
 
-The JSON file contains overall totals and per-file metrics, suitable for uploading to Codecov, Coveralls, or piping into custom scripts.
+The JSON file contains totals for all files and metrics for each file. You can upload it to Codecov or Coveralls. You can also use it in custom scripts.
 
 ### SVG badge
 
-Generate a `coverage: 82%` badge and commit it alongside your README:
+Create a `coverage: 82%` badge. Commit the badge with your README.
 
 ```bash
 fullcoverage App.xcresult --badge docs/coverage.svg
@@ -261,7 +269,7 @@ fullcoverage App.xcresult --badge docs/coverage.svg
 
 ### By target
 
-Multi-target apps show all files in a flat list by default. Use `--group-by target` to add collapsible group headings with per-target subtotals:
+Multi-target apps show all files in one list by default. Use `--group-by target` to add collapsible group headings and totals for each target:
 
 ```bash
 fullcoverage App.xcresult --group-by target
@@ -269,7 +277,7 @@ fullcoverage App.xcresult --group-by target
 
 ### By CODEOWNERS
 
-Group files by team ownership using a standard `.github/CODEOWNERS` file. Files not matched by any rule appear under "Unowned":
+Use a standard `.github/CODEOWNERS` file to group files by team ownership. Files that do not match a rule appear under "Unowned":
 
 ```bash
 fullcoverage App.xcresult --group-by codeowners
@@ -291,23 +299,23 @@ fullcoverage App.xcresult --ignore '*Tests*' --ignore '*.generated.swift'
 fullcoverage App.xcresult --include 'Sources/Auth/*'
 ```
 
-Patterns are matched against the full file path using glob syntax (`*` = any sequence, `?` = single character).
+Patterns match the full file path. They use glob syntax (`*` means any sequence and `?` means one character).
 
-### Importing from a Slather config
+### Import from a Slather config
 
-If your project already has a `.slather.yml`, you can import its `ignore` list directly instead of duplicating it:
+If the project has a `.slather.yml` file, import its `ignore` list. You do not need to copy the list.
 
 ```bash
 fullcoverage App.xcresult --slather-config .slather.yml
 ```
 
-Or set it once in `.fullcoverage.yml`:
+You can also set the option in `.fullcoverage.yml`:
 
 ```yaml
 slather_config: .slather.yml
 ```
 
-The CLI flag takes precedence. Only the `ignore:` key is read from the Slather file; all other Slather-specific keys are ignored.
+The CLI flag overrides this option. The tool reads only the `ignore:` key from the Slather file. It ignores other Slather-specific keys.
 
 ## How it works
 
@@ -321,13 +329,17 @@ xcresult
        → per-line executionCount + subranges
 ```
 
-**A note on branch coverage:** Imagine you write `if isLoggedIn && hasPermission { ... }`. Swift can skip checking `hasPermission` entirely if `isLoggedIn` is already `false` — that's called short-circuit evaluation. So even though your tests ran that line, they might never have tested the case where `isLoggedIn` is `true` but `hasPermission` is `false`.
+**Branch coverage:** Consider `if isLoggedIn && hasPermission { ... }`. Swift does not check `hasPermission` when `isLoggedIn` is `false`. This is short-circuit evaluation.
 
-Xcode tracks each of those sub-expressions separately (called *subranges*). fullcoverage reads those counts and uses them to approximate branch coverage: if any sub-expression on a line was never evaluated, that line is flagged as a partial branch.
+Tests can run that line without testing the case where `isLoggedIn` is `true` and `hasPermission` is `false`.
 
-This isn't exactly the same as a traditional branch coverage tool, but it's a genuinely useful signal for finding conditions your tests never exercised.
+Xcode tracks each sub-expression separately. It calls these items *subranges*. fullcoverage reads the counts. It uses them to estimate branch coverage.
 
-No instrumented binary or `.profdata` extraction is needed — everything is read directly from the xcresult bundle.
+If a sub-expression on a line is never evaluated, fullcoverage marks the line as a partial branch.
+
+This result differs from traditional branch coverage. It still helps you find conditions that tests did not run.
+
+The tool needs no instrumented binary or `.profdata` extraction. It reads all data from the xcresult bundle.
 
 ## Project layout
 
