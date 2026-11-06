@@ -17,13 +17,7 @@ func generate(reports: [FileReport], outputDir: URL, options: GenerateOptions = 
         let filesDir = outputDir.appendingPathComponent("files")
         try fm.createDirectory(at: filesDir, withIntermediateDirectories: true)
 
-        // Copy stylesheet
-        guard let cssSource = Bundle.module.url(forResource: "style", withExtension: "css") else {
-            throw NSError(domain: "fullcoverage", code: 1, userInfo: [NSLocalizedDescriptionKey: "style.css not found in bundle"])
-        }
-        let cssDest = outputDir.appendingPathComponent("style.css")
-        if fm.fileExists(atPath: cssDest.path) { try fm.removeItem(at: cssDest) }
-        try fm.copyItem(at: cssSource, to: cssDest)
+        try styleCSS.write(to: outputDir.appendingPathComponent("style.css"), atomically: true, encoding: .utf8)
 
         // Write index
         let indexHTML = renderIndex(

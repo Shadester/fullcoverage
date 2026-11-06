@@ -16,9 +16,6 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Yams", package: "Yams"),
                 .product(name: "Plot", package: "Plot"),
-            ],
-            resources: [
-                .copy("Resources/style.css"),
             ]
         ),
     ]

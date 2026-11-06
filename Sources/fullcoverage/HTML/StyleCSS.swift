@@ -1,3 +1,5 @@
+// Embedded so the release binary has no SwiftPM resource bundle to ship.
+let styleCSS = #"""
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -273,3 +275,4 @@ kbd {
   font-family: var(--font-mono);
   font-size: 11px;
 }
+"""#
