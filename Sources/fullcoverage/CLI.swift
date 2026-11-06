@@ -41,7 +41,7 @@ struct Fullcoverage: ParsableCommand {
     @Option(name: .shortAndLong, help: "Output directory (default: coverage).")
     var output: String?
 
-    @Option(name: .shortAndLong, help: "Parallel workers (default: CPU count).")
+    @Option(name: .shortAndLong, help: "Deprecated, no effect (line data is fetched in one pass).")
     var jobs: Int?
 
     @Option(name: .long, help: "Glob patterns for files to exclude (repeatable).")
@@ -106,7 +106,6 @@ struct Fullcoverage: ParsableCommand {
 
         // Resolve options: CLI > config > hardcoded default
         let resolvedOutput   = output  ?? cfg.output  ?? "coverage"
-        let resolvedJobs     = jobs    ?? cfg.jobs     ?? ProcessInfo.processInfo.activeProcessorCount
         let resolvedTitle    = title   ?? cfg.title    ?? "fullcoverage"
         let resolvedTarget   = target  ?? cfg.target
         let resolvedSort     = sort    ?? sortOrderFromString(cfg.sort) ?? .name
@@ -126,28 +125,14 @@ struct Fullcoverage: ParsableCommand {
 
         // Parse coverage
         print("Reading coverage from \(xcresultURL.lastPathComponent)…")
-        var reports = try buildReports(
+        let reports = try buildReports(
             xcresult: xcresultURL,
-            maxWorkers: resolvedJobs,
             targetFilter: resolvedTarget
-        ) { done, total in
-            FileHandle.standardOutput.write(
-                Data("\r  Fetching line data… \(done)/\(total)  ".utf8)
-            )
+        ) { path in
+            (includePatterns.isEmpty || shouldInclude(path: path, patterns: includePatterns))
+                && !shouldIgnore(path: path, patterns: ignorePatterns)
         }
-        print() // end progress line
-        print("  \(reports.count) file(s) parsed.")
-
-        // Apply include/ignore filters
-        if !includePatterns.isEmpty {
-            reports = reports.filter { shouldInclude(path: $0.filename, patterns: includePatterns) }
-        }
-        if !ignorePatterns.isEmpty {
-            reports = reports.filter { !shouldIgnore(path: $0.filename, patterns: ignorePatterns) }
-        }
-        if !includePatterns.isEmpty || !ignorePatterns.isEmpty {
-            print("  \(reports.count) file(s) after filters.")
-        }
+        print("  \(reports.count) file(s) after filters.")
 
         // Compute totals
         var tLines = 0, tLinesCov = 0

@@ -123,26 +123,17 @@ private func getReport(xcresult: URL) throws -> [XccovTarget] {
     return try JSONDecoder().decode(XccovReport.self, from: data).targets
 }
 
-func getFileLines(xcresult: URL, filepath: String) throws -> [LineInfo] {
-    let data = try xcrun(["xccov", "view", "--archive", "--file", filepath, "--json", xcresult.path])
-    // Top level is {"<path>": [...lines...]}
-    guard
-        let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-        let rawLines = dict[filepath] as? [[String: Any]]
-    else { return [] }
-
-    let jsonLines = try JSONDecoder().decode(
-        [XccovLine].self,
-        from: JSONSerialization.data(withJSONObject: rawLines)
-    )
-    return jsonLines.map(parseLineInfo)
+/// One xccov call dumps line data for every file; far cheaper than one process per file.
+private func getAllFileLines(xcresult: URL) throws -> [String: [LineInfo]] {
+    let data = try xcrun(["xccov", "view", "--archive", "--json", xcresult.path])
+    let all = try JSONDecoder().decode([String: [XccovLine]].self, from: data)
+    return all.mapValues { $0.map(parseLineInfo) }
 }
 
 func buildReports(
     xcresult: URL,
-    maxWorkers: Int = 8,
     targetFilter: String? = nil,
-    onProgress: ((Int, Int) -> Void)? = nil
+    keep: (String) -> Bool = { _ in true }
 ) throws -> [FileReport] {
     var targets = try getReport(xcresult: xcresult)
     if targets.isEmpty { throw FullcoverageError.noTargetsFound }
@@ -152,53 +143,20 @@ func buildReports(
         targets = targets.filter { $0.name.localizedCaseInsensitiveContains(filter) }
     }
 
-    // Collect unique file entries (first target wins for de-duplication)
+    let linesByPath = try getAllFileLines(xcresult: xcresult)
+
+    // First target wins for de-duplication
     var seen = Set<String>()
-    var fileEntries: [(path: String, target: String, file: XccovFile)] = []
+    var reports: [FileReport] = []
     for target in targets {
-        for file in target.files where !seen.contains(file.path) {
-            seen.insert(file.path)
-            fileEntries.append((file.path, target.name, file))
+        for file in target.files where keep(file.path) && seen.insert(file.path).inserted {
+            reports.append(FileReport(
+                filename: file.path,
+                targetName: target.name,
+                summary: parseFileSummary(file),
+                lines: linesByPath[file.path] ?? []
+            ))
         }
     }
-
-    // Fetch per-line data in parallel, bounded to maxWorkers concurrent subprocesses.
-    var linesByPath = [String: [LineInfo]]()
-    let lock = NSLock()
-    var fetchError: Error?
-    var completedCount = 0
-    let total = fileEntries.count
-    let semaphore = DispatchSemaphore(value: maxWorkers)
-    let group = DispatchGroup()
-
-    for entry in fileEntries {
-        semaphore.wait()
-        group.enter()
-        DispatchQueue.global(qos: .userInitiated).async {
-            defer { semaphore.signal(); group.leave() }
-            guard fetchError == nil else { return }
-            do {
-                let lines = try getFileLines(xcresult: xcresult, filepath: entry.path)
-                lock.withLock {
-                    linesByPath[entry.path] = lines
-                    completedCount += 1
-                    onProgress?(completedCount, total)
-                }
-            } catch {
-                lock.withLock { if fetchError == nil { fetchError = error } }
-            }
-        }
-    }
-    group.wait()
-
-    if let error = fetchError { throw error }
-
-    return fileEntries.map { entry in
-        FileReport(
-            filename: entry.path,
-            targetName: entry.target,
-            summary: parseFileSummary(entry.file),
-            lines: linesByPath[entry.path] ?? []
-        )
-    }
+    return reports
 }
