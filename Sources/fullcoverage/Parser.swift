@@ -28,15 +28,38 @@ private struct XccovFunction: Decodable {
     let executableLines: Int
 }
 
+/// xccov can print a wrapped negative counter (e.g. -3 as 2^64-3). Treat anything
+/// that doesn't fit Int64 as 0 (uncovered) rather than failing the whole run.
+private func decodeCount<K: CodingKey>(_ c: KeyedDecodingContainer<K>, _ key: K) throws -> Int? {
+    guard c.contains(key), try !c.decodeNil(forKey: key) else { return nil }
+    if let v = try? c.decode(Int.self, forKey: key) { return v }
+    _ = try c.decode(UInt64.self, forKey: key)
+    return 0
+}
+
 private struct XccovLine: Decodable {
     let line: Int
     let isExecutable: Bool
     let executionCount: Int?
     let subranges: [XccovSubrange]?
+
+    enum CodingKeys: String, CodingKey { case line, isExecutable, executionCount, subranges }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        line = try c.decode(Int.self, forKey: .line)
+        isExecutable = try c.decode(Bool.self, forKey: .isExecutable)
+        executionCount = try decodeCount(c, .executionCount)
+        subranges = try c.decodeIfPresent([XccovSubrange].self, forKey: .subranges)
+    }
 }
 
 private struct XccovSubrange: Decodable {
     let executionCount: Int
+
+    enum CodingKeys: String, CodingKey { case executionCount }
+    init(from decoder: Decoder) throws {
+        executionCount = try decodeCount(decoder.container(keyedBy: CodingKeys.self), .executionCount) ?? 0
+    }
 }
 
 // MARK: - Subprocess
